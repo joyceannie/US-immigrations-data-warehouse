@@ -109,7 +109,7 @@ def clean_immigration_data(spark, input_path, output_path):
     convert_visa_udf = F.udf(convert_visa, StringType())
     get_sas_day_udf = F.udf(get_sas_day, StringType())
     
-    #months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+    # months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
     months = ['jan']
     for month in months:
         input_data_path = f"{input_path}/i94_{month}16_sub.sas7bdat"
@@ -124,8 +124,7 @@ def clean_immigration_data(spark, input_path, output_path):
             .withColumn('port_code', df['i94port'].cast(StringType())) \
             .withColumn('year', df['i94yr'].cast(IntegerType())) \
             .withColumn('month', df['i94mon'].cast(IntegerType())) \
-            .withColumn('arrival_day', get_sas_day_udf(df['arrdate'])) \
-            .withColumn('departure_day', get_sas_day_udf(df['depdate'])) \
+            .withColumn('partition_date', convert_date_udf(df['arrdate'])) \
             .withColumn('age', df['i94bir'].cast(IntegerType())) \
             .withColumn('birth_year', df['biryear'].cast(IntegerType())) \
             .withColumn('travel_mode', convert_travel_mode_udf(df['i94mode'])) \
@@ -134,11 +133,11 @@ def clean_immigration_data(spark, input_path, output_path):
             .withColumn('departure_date', convert_date_udf(df['depdate'])) \
             .withColumn('visa_type', df['visatype'])
        
-        immigration_data = df.select(['year', 'month', 'arrival_day', 'country_code', 'port_code', 'age', 'travel_mode', 'visa_category', 'visa_type', 'gender', 'birth_year', 'arrival_date', 'departure_day', 'departure_date'])
+        immigration_data = df.select(['year', 'month', 'partition_date', 'country_code', 'port_code', 'age', 'travel_mode', 'visa_category', 'visa_type', 'gender', 'birth_year', 'arrival_date', 'departure_date'])
         
         # Write data in parquet format partitioned by year, month and arrival_day
-        print(f"Writing {input_data_path} to output...")
-        immigration_data.write.mode("append").partitionBy("year", "month", "arrival_date") \
+        print(f"Writing {input_data_path} to output path = {output_path}...")
+        immigration_data.write.mode("append").partitionBy("year", "month", "partition_date") \
             .parquet(f"{output_path}/immigration_data")
         print(f"Completed {input_path}.")
 
