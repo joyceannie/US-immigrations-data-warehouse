@@ -32,7 +32,6 @@ os.environ["HADOOP_HOME"] = "/opt/spark-2.4.3-bin-hadoop2.7"
 
 # Read input and output paths
 I94_INPUT_PATH = config['LOCAL']['I94_INPUT_PATH']
-TEMPERATURE_INPUT_PATH = config['LOCAL']['TEMPERATURE_INPUT_PATH']
 OUTPUT_PATH = config['S3']['BUCKET_PATH']
 
 def create_spark_session():
@@ -141,60 +140,60 @@ def clean_immigration_data(spark, input_path, output_path):
             .parquet(f"{output_path}/immigration_data")
         print(f"Completed {input_path}.")
 
-def extract_country_temperature_data(spark, input_path, output_path):
-    """
-    Function to extract the latest temperature data from all the countires, and write the data in parquet format. 
-    :param: spark: spark session
-    :param: input_path: location of the input file
-    :param: output_path: location of the output file
-    :return: None
-    """
+# def extract_country_temperature_data(spark, input_path, output_path):
+#     """
+#     Function to extract the latest temperature data from all the countires, and write the data in parquet format. 
+#     :param: spark: spark session
+#     :param: input_path: location of the input file
+#     :param: output_path: location of the output file
+#     :return: None
+#     """
     
-    # Read data from the input path
-    country_data_path = f"{input_path}/GlobalLandTemperaturesByCountry.csv"
-    data = spark.read.option("header", True).option("inferSchema",True).csv(country_data_path)
+#     # Read data from the input path
+#     country_data_path = f"{input_path}/GlobalLandTemperaturesByCountry.csv"
+#     data = spark.read.option("header", True).option("inferSchema",True).csv(country_data_path)
     
-    # Remove rows without temperature data
-    data = data.filter(data.AverageTemperature.isNotNull())
+#     # Remove rows without temperature data
+#     data = data.filter(data.AverageTemperature.isNotNull())
     
-    # Select latest temperature from all the countries
-    data = data.withColumn("temperature_rank", F.dense_rank().over(Window.partitionBy("Country").orderBy(F.desc("dt"))))
-    data = data.filter(data['temperature_rank'] == 1).orderBy("Country")
+#     # Select latest temperature from all the countries
+#     data = data.withColumn("temperature_rank", F.dense_rank().over(Window.partitionBy("Country").orderBy(F.desc("dt"))))
+#     data = data.filter(data['temperature_rank'] == 1).orderBy("Country")
     
-    # Write data in parquet format to the output path
-    data.write.mode("overwrite").parquet(f"{output_path}/country_temperature_data")
+#     # Write data in parquet format to the output path
+#     data.write.mode("overwrite").parquet(f"{output_path}/country_temperature_data")
     
-def extract_city_temperature_data(spark, input_path, output_path):
-    """
-    Extract the latest temperature of all US cities, and write the data in parquet format
-    :param: spark: spark session
-    :param: input_path: location of the input file
-    :param: output_path: location of the output file
-    :return: None
-    """
+# def extract_city_temperature_data(spark, input_path, output_path):
+#     """
+#     Extract the latest temperature of all US cities, and write the data in parquet format
+#     :param: spark: spark session
+#     :param: input_path: location of the input file
+#     :param: output_path: location of the output file
+#     :return: None
+#     """
     
-    # Read data from input path
-    city_data_path  = f"{input_path}/GlobalLandTemperaturesByCity.csv"
-    city_data = spark.read.option("header", True).option("inferSchema",True).csv(city_data_path)
+#     # Read data from input path
+#     city_data_path  = f"{input_path}/GlobalLandTemperaturesByCity.csv"
+#     city_data = spark.read.option("header", True).option("inferSchema",True).csv(city_data_path)
     
-    # Remove rows without temperature data
-    city_data = city_data.filter(city_data.AverageTemperature.isNotNull())
+#     # Remove rows without temperature data
+#     city_data = city_data.filter(city_data.AverageTemperature.isNotNull())
     
-    # Select cities within US
-    city_data = city_data.filter(city_data['Country'] == "United States")
+#     # Select cities within US
+#     city_data = city_data.filter(city_data['Country'] == "United States")
     
-    # Select latest temperature of all the cities
-    city_data = city_data.withColumn("temperature_rank", F.dense_rank().over(Window.partitionBy("City").orderBy(F.desc("dt"))))
-    city_data = city_data.filter(city_data['temperature_rank'] == 1).orderBy('City')
+#     # Select latest temperature of all the cities
+#     city_data = city_data.withColumn("temperature_rank", F.dense_rank().over(Window.partitionBy("City").orderBy(F.desc("dt"))))
+#     city_data = city_data.filter(city_data['temperature_rank'] == 1).orderBy('City')
     
-    # Write data in parquet format to the output path
-    city_data.write.mode("overwrite").parquet(f"{output_path}/city_temperature_data")   
+#     # Write data in parquet format to the output path
+#     city_data.write.mode("overwrite").parquet(f"{output_path}/city_temperature_data")   
 
 def main():
     spark = create_spark_session()  
     clean_immigration_data(spark, I94_INPUT_PATH, OUTPUT_PATH)    
-    extract_country_temperature_data(spark, TEMPERATURE_INPUT_PATH, OUTPUT_PATH)
-    extract_city_temperature_data(spark, TEMPERATURE_INPUT_PATH, OUTPUT_PATH)
+#     extract_country_temperature_data(spark, TEMPERATURE_INPUT_PATH, OUTPUT_PATH)
+#     extract_city_temperature_data(spark, TEMPERATURE_INPUT_PATH, OUTPUT_PATH)
                                          
 if __name__ == "__main__":
     main()
