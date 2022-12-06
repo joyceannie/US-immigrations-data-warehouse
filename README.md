@@ -9,7 +9,7 @@ At a high level, data is extracted from the immigration SAS data, partitioned by
 ## Datasets
 
 * I94 Immigration Data: 
-This data comes from the US National Tourism and Trade Office. The data consists of 12 files containing data for each month. Each file has around 3 million rows and 28 columns. All the fields of the dataset is explained in `docs/I94_SAS_Labels_Descriptions.SAS`. The data is obtained from [here](https://www.trade.gov/national-travel-and-tourism-office). A small sample of the data is in `data/immigration_data_sample.csv`.
+This data comes from the US National Tourism and Trade Office. The data consists of 12 files containing data for each month. Each file has around 3 million rows and 28 columns. All the fields of the dataset is explained in `docs/I94_SAS_Labels_Descriptions.SAS`. The data is obtained from [here](https://www.trade.gov/national-travel-and-tourism-office). As the dataset is too large, it is not uploaded to the repo. A small sample of the data is in `data/immigration_data_sample.csv`. 
 
 * World Temperature Data
 This dataset came from [Kaggle](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data). `GlobalLandTemperaturesByCity.csv` and `GlobalLandTemperaturesByCountry.csv` are used from this dataset. These files are present in the `data` folder.
@@ -29,15 +29,15 @@ The project uses star schema. There is one fact table with the main immigration 
 
 The main technologies used are:
 
-Python3
+**Python3**  
 
-Amazon S3 - S3  is used as the data lake storage of the data to be processed. 
+**Amazon S3** - S3  is used as the data lake storage of the data to be processed.  
 
-Apache Spark - Spark is used to extract, clean, and partition the immigration data. As the immigration data files are too large, it is preprocessed using Spark. In production we would probably add a DAG to Apache Airflow to submit a job to a Spark cluster on a monthly basis or as needed. 
+**Apache Spark** - Spark is used to extract, clean, and partition the immigration data. As the immigration data files are too large, it is preprocessed using Spark. In production we would probably add a DAG to Apache Airflow to submit a job to a Spark cluster on a monthly basis or as needed.  
 
-Apache Airflow - Apache Airflow is used as a tool for the primary data pipeline. The pipeline schedules and coordinates the flow of data from the S3 data lake to Amazon Redshift and performs quality checks along the way. Airflow makes it easy to set up the pipeline and make adjustments as requirements change over time.
+**Apache Airflow** - Apache Airflow is used as a tool for the primary data pipeline. The pipeline schedules and coordinates the flow of data from the S3 data lake to Amazon Redshift and performs quality checks along the way. Airflow makes it easy to set up the pipeline and make adjustments as requirements change over time.  
 
-Amazon Redshift - Redshift is used for the data warehouse. Redshift offers efficient storage as well as high performance query processing.
+**Amazon Redshift** - Redshift is used for the data warehouse. Redshift offers efficient storage as well as high performance query processing.  
 
 ## Data Preprocessing
 The data is preprocessed before loading to the S3 bucket.  The preprocessig script for the immigration data are in `spark/extract_immigration_data.py`. The preprocessed immigration data is also uploaded to the S3 bucket using this script. All the other datasets are cleaned and uploaded to S3 bucket manually. The `data/data_for_s3_upload` contains all the other cleaned datasets. 
@@ -75,11 +75,11 @@ There are 2 DAGs to be executed.
 
 ## Approach To Other Scenarios
 
-**If the data was increased by 100x.**
+**If the data was increased by 100x.**  
  If the data were increased 100x, then we should be able to easily handle it using Spark and Redshift and scaling the clusters as needed.As of now, some of the data cleaning is done using pandas. We may have to use Spark instead of pandas in this case. 
  
-**If the pipelines were run on a daily basis by 7am.**
+**If the pipelines were run on a daily basis by 7am.**  
 The pipeline is already set to run daily. The time taken to process a day is a matter of minutes. We might modify the scheduling to a specific time of day and introduce an SLA in Airflow to ensure jobs are completed in a timely manner and adjust accordingly.
 
-**If the database needed to be accessed by 100+ people**
+**If the database needed to be accessed by 100+ people**  
 Amazon Redshift as a data warehouse should have no issues with this and can be scaled as needed.
