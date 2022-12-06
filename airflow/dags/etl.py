@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from airflow.models import DAG
-# import configparser
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.hooks.postgres_hook import PostgresHook
@@ -10,10 +9,7 @@ from airflow.operators import (StageToRedshiftOperator, LoadFactOperator,
                                 LoadDimensionOperator, DataQualityOperator)
 from helpers import SqlQueries
 
-# config = configparser.ConfigParser()
-# config.read('../../config/capstone.cfg')
-
-DATA_LAKE_PATH = 's3a://capstone-project-us-immigration-bucket/'
+DATA_LAKE_PATH = 's3://capstone-project-us-immigration'
 DATABASE_CONNECTION_ID = "redshift"
 AWS_CREDENTIALS_ID = "aws_credentials"
 
@@ -27,7 +23,7 @@ default_arguments = {
 
 # Partitioned path broken down by year, month, and day or arrival
 templated_partition_path = \
-    "{{execution_date.strftime('s3://capstone-project-us-immigration-bucket/immigration_data/year=%Y/month=%-m/partition_date=%Y-%m-%d/*.parquet')}}"
+    "{{execution_date.strftime('s3://capstone-project-us-immigration/immigration_data/year=%Y/month=%-m/partition_date=%Y-%m-%d/*.parquet')}}"
 
 dag = DAG('etl_redshift',
           default_args=default_arguments,
@@ -41,7 +37,7 @@ stage_immigration_data_task = StageToRedshiftOperator(
     dag=dag,
     redshift_conn_id=DATABASE_CONNECTION_ID,
     aws_credentials_id=AWS_CREDENTIALS_ID,
-    s3_path=templated_partition_path,
+    s3_path=f"{DATA_LAKE_PATH}/immigration_data/",
     table_name="staging_immigration",
     truncate_table=False,
     copy_format="PARQUET"
@@ -87,23 +83,20 @@ load_demographics_task = LoadDimensionOperator(
     select_sql=SqlQueries.demographics_table_insert
 ) 
 
-# define a table/column map to check null values
-# check_table_column_map = { 'fact_immigration':'immigration_id', 'dim_countries':'country_code', 'dim_ports':'port_code','dim_demographics':'city', 'dim_time':'sas_timestamp'}
+check_table_column_map = {'staging_countries':'country_code', 'staging_ports':'port_code','staging_demographics':'city', 'dim_countries':'country_code', 'dim_ports':'port_code','dim_demographics':'city', 'dim_time':'sas_timestamp',          'fact_immigration':'immigration_id', }
 
-check_table_column_map = {'staging_countries':'country_code', 'staging_ports':'port_code','staging_demographics':'city', 'dim_countries':'country_code', 'dim_ports':'port_code','dim_demographics':'city', 'dim_time':'sas_timestamp',         'staging_immigration':'immigration_id', 'fact_immigration':'immigration_id', }
-
-# query template to check null values
-# check_nulls_query = "SELECT COUNT(*) FROM {schema}.{table} WHERE {column} IS NULL" 
+# query template to check null alues
+check_nulls_query = "SELECT COUNT(*) FROM {schema}.{table} WHERE {column} IS NULL" 
 
 check_empty_table = "SELECT COUNT(*) FROM {schema}.{table}"
 
 dq_check_input = [
-#     {
-#         "check_feature": "null value",
-#         "check_query": check_nulls_query,
-#         "expected_result": 0,
-#         "check_condition": "equal"
-#     },
+    {
+        "check_feature": "null value",
+        "check_query": check_nulls_query,
+        "expected_result": 0,
+        "check_condition": "equal"
+    },
     {
         "check_feature": "empty_table",
         "check_query": check_empty_table,
@@ -128,8 +121,6 @@ end_operator = DummyOperator(task_id='Stop_execution', dag=dag)
 start_operator >> stage_immigration_data_task
 stage_immigration_data_task >> load_immigration_data_task
 load_immigration_data_task >> [load_ports_task, load_countries_task, load_time_task]
-# load_ports_task >> [load_demographics_task, load_airports_task]
-# [load_demographics_task, load_airports_task, load_countries_task, load_time_task] >> data_quality_check_task
 load_ports_task >> load_demographics_task
 [load_demographics_task, load_countries_task, load_time_task] >> data_quality_check_task
 

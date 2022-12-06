@@ -2,16 +2,12 @@
 
 import datetime
 from airflow import DAG
-# import configparser
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators import StageToRedshiftOperator
 from airflow.operators.dummy_operator import DummyOperator
 from helpers import SqlQueries
 
-# config = configparser.ConfigParser()
-# config.read('../../config/capstone.cfg')
-
-DATA_LAKE_PATH = 's3://capstone-project-us-immigration-bucket/'
+DATA_LAKE_PATH = 's3://capstone-project-us-immigration'
 DATABASE_CONNECTION_ID = "redshift"
 AWS_CREDENTIALS_ID = "aws_credentials"
 
@@ -122,7 +118,7 @@ stage_port_codes_task = StageToRedshiftOperator(
     aws_credentials_id=AWS_CREDENTIALS_ID,
     dag=dag,
     table_name="public.staging_ports",
-    s3_path=f"{DATA_LAKE_PATH}i94_ports.csv",
+    s3_path=f"{DATA_LAKE_PATH}/i94_ports.csv",
     copy_format='CSV IGNOREHEADER 1',
     truncate_table=False
 )
@@ -134,7 +130,7 @@ stage_country_codes_task = StageToRedshiftOperator(
     redshift_conn_id=DATABASE_CONNECTION_ID,
     aws_credentials_id=AWS_CREDENTIALS_ID,
     table_name='staging_countries',
-    s3_path=f'{DATA_LAKE_PATH}i94_countries.csv',
+    s3_path=f'{DATA_LAKE_PATH}/i94_countries.csv',
     copy_format='CSV IGNOREHEADER 1',
     truncate_table=False,
 )
@@ -146,7 +142,7 @@ stage_demographics_task = StageToRedshiftOperator(
     aws_credentials_id=AWS_CREDENTIALS_ID,
     dag=dag,
     table_name="staging_demographics",
-    s3_path=f"{DATA_LAKE_PATH}us-cities-demographics.csv",
+    s3_path=f"{DATA_LAKE_PATH}/us-cities-demographics.csv",
     truncate_table=False,
     copy_format='CSV IGNOREHEADER 1'
 )
@@ -157,9 +153,9 @@ stage_city_temperatures_task = StageToRedshiftOperator(
     dag=dag,
     redshift_conn_id=DATABASE_CONNECTION_ID,
     aws_credentials_id=AWS_CREDENTIALS_ID,
-    s3_path=f"{DATA_LAKE_PATH}city_temperature_data/*.parquet",
+    s3_path=f"{DATA_LAKE_PATH}/GlobalLandTemperaturesByCity.csv",
     table_name="staging_city_temperatures",
-    copy_format="PARQUET",
+    copy_format='CSV IGNOREHEADER 1',
     truncate_table=False
 )
 
@@ -169,9 +165,9 @@ stage_country_temperatures_task = StageToRedshiftOperator(
     dag=dag,
     redshift_conn_id=DATABASE_CONNECTION_ID,
     aws_credentials_id=AWS_CREDENTIALS_ID,
-    s3_path=f"{DATA_LAKE_PATH}country_temperature_data/*.parquet",
+    s3_path=f"{DATA_LAKE_PATH}/GlobalLandTemperaturesByCountry.csv",
     table_name="staging_country_temperatures",
-    copy_format="PARQUET",
+    copy_format='CSV IGNOREHEADER 1',
     truncate_table=False
 )
 

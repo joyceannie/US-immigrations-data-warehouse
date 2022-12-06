@@ -7,14 +7,13 @@ class SqlQueries:
     DROP TABLE IF EXISTS public.staging_city_temperatures;
     CREATE TABLE public.staging_city_temperatures
     (
-    dt timestamp without time zone,
+    dt date,
     "AverageTemperature" double precision,
     "AverageTemperatureUncertainty" double precision,
     "City" text,
     "Country" text,
-    "Latitude" text,
-    "Longitude" text,
-    rank integer
+    "Latitude" double precision,
+    "Longitude" double precision
     );
     """
     
@@ -23,11 +22,10 @@ class SqlQueries:
     DROP TABLE IF EXISTS public.staging_country_temperatures;
     CREATE TABLE public.staging_country_temperatures
     (
-    dt text,
+    dt date,
     "AverageTemperature" double precision,
     "AverageTemperatureUncertainty" double precision,
-    "Country" text,
-    rank integer
+    "Country" text
     );
     """       
 
@@ -104,15 +102,25 @@ class SqlQueries:
     PRIMARY KEY(country_code)
     );
     """
-    
+
     countries_table_insert = ("""
-    INSERT INTO public.dim_countries(country_code, country, average_temperature) SELECT DISTINCT c.country_code, c.country, t.AverageTemperature
+    INSERT INTO public.dim_countries(country_code, country, average_temperature) 
+    SELECT  c.country_code, c.country, MAX(t.AverageTemperature)
     FROM public.staging_immigration i
     JOIN public.staging_countries c
     ON i.country_code = c.country_code
     LEFT JOIN public.staging_country_temperatures t
-    ON UPPER(c.country) = UPPER(t.Country);
+    ON UPPER(c.country) = UPPER(t.Country)
+    GROUP BY  c.country_code, c.country;
     """)
+    
+#     countries_table_insert = ("""
+#     INSERT INTO public.dim_countries(country_code, country) 
+#     SELECT  DISTINCT c.country_code, c.country
+#     FROM public.staging_immigration i
+#     JOIN public.staging_countries c
+#     ON i.country_code = c.country_code;
+#     """)
 
     # Create staging ports table
     create_staging_ports_table = """
@@ -138,13 +146,23 @@ class SqlQueries:
     """
     
     ports_table_insert = ("""
-    INSERT INTO public.dim_ports(port_code, port_city, port_state, average_temperature) SELECT DISTINCT p.port_code, p.city, p.state, t.AverageTemperature
+    INSERT INTO public.dim_ports(port_code, port_city, port_state, average_temperature) 
+    SELECT p.port_code, p.city, p.state, MAX(t.AverageTemperature)
     FROM public.staging_immigration i
     JOIN public.staging_ports p
     ON i.port_code = p.port_code
     LEFT JOIN public.staging_city_temperatures t
-    ON UPPER(t.City) = UPPER(p.city);
+    ON UPPER(t.City) = UPPER(p.city)
+    GROUP BY p.port_code, p.city, p.state;
     """)
+    
+#     ports_table_insert = ("""
+#     INSERT INTO public.dim_ports(port_code, port_city, port_state) 
+#     SELECT DISTINCT p.port_code, p.city, p.state
+#     FROM public.staging_immigration i
+#     JOIN public.staging_ports p
+#     ON i.port_code = p.port_code;
+#     """)
   
     
     # Create demographics staging table
