@@ -40,7 +40,7 @@ The main technologies used are:
 **Amazon Redshift** - Redshift is used for the data warehouse. Redshift offers efficient storage as well as high performance query processing.  
 
 ## Data Preprocessing
-The data is preprocessed before loading to the S3 bucket.  The preprocessig script for the immigration data are in `spark/extract_immigration_data.py`. The preprocessed immigration data is also uploaded to the S3 bucket using this script. All the other datasets are cleaned and uploaded to S3 bucket manually. The `data/data_for_s3_upload` contains all the other cleaned datasets. 
+The data is preprocessed before loading to the S3 bucket.  The preprocessig script for the immigration data are in `spark/extract_immigration_data.py`. The major work in this step is to convert the arrival date and the departure date to the right format. The dates are stored as days since 1/1/1960. It is converted to datetime format. The preprocessed immigration data is also uploaded to the S3 bucket using this script. All the other datasets are cleaned and uploaded to S3 bucket manually. The `data/data_for_s3_upload` contains all the other cleaned datasets. 
 
 ## Data Pipeline
 
