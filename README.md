@@ -9,7 +9,7 @@ At a high level, data is extracted from the immigration SAS data, partitioned by
 ## Datasets
 
 * I94 Immigration Data  
-This data comes from the US National Tourism and Trade Office. The data consists of 12 files containing data for each month. Each file has around 3 million rows and 28 columns. All the fields of the dataset is explained in `docs/I94_SAS_Labels_Descriptions.SAS`. The data is obtained from [here](https://www.trade.gov/national-travel-and-tourism-office). As the dataset is too large, it is not uploaded to the repo. A small sample of the data is in `data/immigration_data_sample.csv`. 
+This data comes from the US National Tourism and Trade Office. The data consists of 12 files containing data for each month. Each file has around 3 million rows and 28 columns. The data is in sas7bdat format. A SAS7BDAT file is a database storage file created by Statistical Analysis System (SAS) software. All the fields of the dataset is explained in `docs/I94_SAS_Labels_Descriptions.SAS`. The data is obtained from [here](https://www.trade.gov/national-travel-and-tourism-office). As the dataset is too large, it is not uploaded to the repo. A small sample of the data is in `data/immigration_data_sample.csv`. 
 
 * World Temperature Data  
 This dataset came from [Kaggle](https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data). `GlobalLandTemperaturesByCity.csv` and `GlobalLandTemperaturesByCountry.csv` are used from this dataset. These files are present in the `data` folder.
